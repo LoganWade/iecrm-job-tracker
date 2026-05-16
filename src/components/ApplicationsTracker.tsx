@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { masterData, Company } from '../data/masterData';
-import { Plus, Trash2, Edit2 } from 'lucide-react';
+import { Plus, Trash2, Edit2, Download, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Application {
@@ -28,6 +28,46 @@ export default function ApplicationsTracker({ applications, saveApplications, co
   });
   const [editingId, setEditingId] = useState<string | null>(null);
 
+  // ==================== AUTO SAVE TO JSON FILE ====================
+  useEffect(() => {
+    if (applications.length > 0) {
+      const dataStr = JSON.stringify(applications, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', 'applications.json');
+      linkElement.click();
+    }
+  }, [applications]);
+
+  const exportData = () => {
+    const dataStr = JSON.stringify(applications, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    const link = document.createElement('a');
+    link.href = dataUri;
+    link.download = 'applications.json';
+    link.click();
+  };
+
+  const importData = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const imported = JSON.parse(event.target?.result as string);
+        saveApplications(imported);
+        alert('✅ Applications imported successfully!');
+      } catch (err) {
+        alert('❌ Invalid JSON file');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // ==================== FORM FUNCTIONS ====================
   const addOrUpdateApplication = () => {
     if (!newApp.companyName || !newApp.jobTitle) return;
 
@@ -76,16 +116,17 @@ export default function ApplicationsTracker({ applications, saveApplications, co
   return (
     <div className="space-y-8">
       {/* Add New Application Form */}
-      <div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <Plus className="w-5 h-5" /> {editingId ? 'Edit Application' : 'Log New Application'}
+      <div className="card p-8">
+        <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
+          <Plus className="w-6 h-6" /> 
+          {editingId ? 'Edit Application' : 'Log New Application'}
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <select
             value={newApp.companyName || ''}
             onChange={(e) => setNewApp({ ...newApp, companyName: e.target.value })}
-            className="bg-zinc-950 border border-zinc-700 p-3 rounded-xl"
+            className="input"
           >
             <option value="">Select Company</option>
             {companies.map(c => (
@@ -98,20 +139,20 @@ export default function ApplicationsTracker({ applications, saveApplications, co
             placeholder="Job Title (e.g. Journeyman Electrician)"
             value={newApp.jobTitle || ''}
             onChange={(e) => setNewApp({ ...newApp, jobTitle: e.target.value })}
-            className="bg-zinc-950 border border-zinc-700 p-3 rounded-xl"
+            className="input"
           />
 
           <input
             type="date"
             value={newApp.appliedDate}
             onChange={(e) => setNewApp({ ...newApp, appliedDate: e.target.value })}
-            className="bg-zinc-950 border border-zinc-700 p-3 rounded-xl"
+            className="input"
           />
 
           <select
             value={newApp.status}
             onChange={(e) => setNewApp({ ...newApp, status: e.target.value as any })}
-            className="bg-zinc-950 border border-zinc-700 p-3 rounded-xl"
+            className="input"
           >
             {['Applied', 'Screened', 'Interview', 'Offer', 'Rejected', 'Withdrawn'].map(s => (
               <option key={s} value={s}>{s}</option>
@@ -123,7 +164,7 @@ export default function ApplicationsTracker({ applications, saveApplications, co
             placeholder="Recruiter Name / Agency"
             value={newApp.recruiter || ''}
             onChange={(e) => setNewApp({ ...newApp, recruiter: e.target.value })}
-            className="bg-zinc-950 border border-zinc-700 p-3 rounded-xl"
+            className="input"
           />
 
           <input
@@ -131,7 +172,7 @@ export default function ApplicationsTracker({ applications, saveApplications, co
             placeholder="Application Link (optional)"
             value={newApp.link || ''}
             onChange={(e) => setNewApp({ ...newApp, link: e.target.value })}
-            className="bg-zinc-950 border border-zinc-700 p-3 rounded-xl"
+            className="input"
           />
         </div>
 
@@ -139,37 +180,49 @@ export default function ApplicationsTracker({ applications, saveApplications, co
           placeholder="Notes (salary expectations, follow-up dates, etc.)"
           value={newApp.notes || ''}
           onChange={(e) => setNewApp({ ...newApp, notes: e.target.value })}
-          className="w-full mt-4 bg-zinc-950 border border-zinc-700 p-3 rounded-xl h-24"
+          className="input h-28 mt-4"
         />
 
         <button
           onClick={addOrUpdateApplication}
-          className="mt-4 bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-xl font-medium flex items-center gap-2"
+          className="button mt-6 w-full text-lg"
         >
           {editingId ? 'Update Application' : 'Add Application'}
         </button>
       </div>
 
+      {/* Import / Export */}
+      <div className="flex gap-4 justify-end">
+        <button onClick={exportData} className="button flex items-center gap-2">
+          <Download size={18} /> Export applications.json
+        </button>
+        
+        <label className="button flex items-center gap-2 cursor-pointer">
+          <Upload size={18} /> Import applications.json
+          <input type="file" accept=".json" onChange={importData} className="hidden" />
+        </label>
+      </div>
+
       {/* Applications List */}
-      <div className="bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden">
-        <div className="p-6 border-b border-zinc-800">
-          <h2 className="text-xl font-semibold">Your Applications ({applications.length})</h2>
-        </div>
+      <div className="card p-8">
+        <h2 className="text-2xl font-semibold mb-6">
+          Your Applications ({applications.length})
+        </h2>
 
         {applications.length === 0 ? (
-          <div className="p-12 text-center text-zinc-500">
+          <div className="text-center py-16 text-zinc-500">
             No applications logged yet. Add one above!
           </div>
         ) : (
-          <div className="divide-y divide-zinc-800">
+          <div className="space-y-4">
             {applications.map(app => (
-              <div key={app.id} className="p-6 flex flex-col md:flex-row gap-4 items-start md:items-center">
+              <div key={app.id} className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 flex flex-col md:flex-row gap-6 items-start">
                 <div className="flex-1">
-                  <div className="font-semibold">{app.companyName}</div>
-                  <div className="text-sm text-zinc-400">{app.jobTitle}</div>
+                  <div className="font-semibold text-lg">{app.companyName}</div>
+                  <div className="text-zinc-400">{app.jobTitle}</div>
                 </div>
 
-                <div className={`px-4 py-1 rounded-full text-sm ${statusColors[app.status]}`}>
+                <div className={`px-5 py-2 rounded-full text-sm font-medium ${statusColors[app.status]}`}>
                   {app.status}
                 </div>
 
@@ -177,16 +230,14 @@ export default function ApplicationsTracker({ applications, saveApplications, co
                   {format(new Date(app.appliedDate), 'MMM dd, yyyy')}
                 </div>
 
-                {app.recruiter && (
-                  <div className="text-sm text-zinc-400">📞 {app.recruiter}</div>
-                )}
+                {app.recruiter && <div className="text-sm text-zinc-400">📞 {app.recruiter}</div>}
 
-                <div className="flex gap-2 ml-auto">
-                  <button onClick={() => editApp(app)} className="p-2 hover:bg-zinc-800 rounded-lg">
-                    <Edit2 size={18} />
+                <div className="flex gap-3 ml-auto">
+                  <button onClick={() => editApp(app)} className="p-3 hover:bg-zinc-800 rounded-xl">
+                    <Edit2 size={20} />
                   </button>
-                  <button onClick={() => deleteApp(app.id)} className="p-2 hover:bg-zinc-800 rounded-lg text-red-400">
-                    <Trash2 size={18} />
+                  <button onClick={() => deleteApp(app.id)} className="p-3 hover:bg-zinc-800 rounded-xl text-red-400">
+                    <Trash2 size={20} />
                   </button>
                 </div>
               </div>
