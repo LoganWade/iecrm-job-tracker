@@ -24,7 +24,7 @@ export default function CompaniesTable() {
         if (!url) return <span className="text-zinc-500 text-sm">—</span>;
         const href = /^https?:\/\//i.test(url) ? url : `https://${url}`;
         let display = url.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/$/, '');
-        if (display.length > 28) display = display.slice(0, 27) + '…';
+        if (display.length > 22) display = display.slice(0, 21) + '…';
         return (
           <a
             href={href}
@@ -119,8 +119,8 @@ export default function CompaniesTable() {
         </div>
       </div>
 
-      <div className="bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden">
-        <table className="w-full">
+      <div className="bg-zinc-900 rounded-2xl border border-zinc-800 overflow-x-auto">
+        <table className="w-full min-w-[1100px]">
           <thead>
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id} className="border-b border-zinc-800">
@@ -128,7 +128,7 @@ export default function CompaniesTable() {
                   <th
                     key={header.id}
                     onClick={header.column.getToggleSortingHandler()}
-                    className="px-6 py-4 text-left text-sm font-medium text-zinc-400 cursor-pointer hover:text-white"
+                    className="px-4 py-3 text-left text-sm font-medium text-zinc-400 cursor-pointer hover:text-white whitespace-nowrap"
                   >
                     {flexRender(header.column.columnDef.header, header.getContext())}
                   </th>
@@ -140,7 +140,7 @@ export default function CompaniesTable() {
             {table.getRowModel().rows.map(row => (
               <tr key={row.id} className="border-b border-zinc-800 hover:bg-zinc-800/50">
                 {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="px-6 py-4">
+                  <td key={cell.id} className="px-4 py-3">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}

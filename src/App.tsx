@@ -18,7 +18,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-12">
-      <div className="max-w-7xl mx-auto px-6 pt-8">
+      <div className="max-w-screen-2xl mx-auto px-6 pt-8">
         {/* Header */}
         <div className="flex justify-between items-end mb-10">
           <div>
