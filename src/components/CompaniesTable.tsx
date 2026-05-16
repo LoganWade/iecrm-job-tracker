@@ -16,6 +16,28 @@ export default function CompaniesTable() {
 
   const columns: ColumnDef<Company>[] = [
     { accessorKey: 'name', header: 'Company' },
+    {
+      accessorKey: 'website',
+      header: 'Website',
+      cell: ({ row }) => {
+        const url = row.original.website;
+        if (!url) return <span className="text-zinc-500 text-sm">—</span>;
+        const href = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+        let display = url.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/$/, '');
+        if (display.length > 28) display = display.slice(0, 27) + '…';
+        return (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:underline text-sm"
+            title={url}
+          >
+            {display}
+          </a>
+        );
+      },
+    },
     { accessorKey: 'city', header: 'Location' },
     { accessorKey: 'distance', header: 'Distance to FC' },
     { accessorKey: 'size', header: 'Size' },
